@@ -1,0 +1,32 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.flashType": "UART",
+  "idf.adapterTargetName": "esp32c3",
+  "idf.openOcdConfigs": [
+    "board/esp32c3-builtin.cfg"
+  ],
+  "idf.portWin": "COM6",
+  "files.associations": {
+    "shtc3.h": "c",
+    "freertos.h": "c",
+    "esp_bt_main.h": "c",
+    "gatts_server.h": "c",
+    "event_groups.h": "c",
+    "chrono": "c",
+    "functional": "c",
+    "atomic": "c",
+    "*.tcc": "c",
+    "string": "c",
+    "unordered_map": "c",
+    "random": "c",
+    "fstream": "c",
+    "sstream": "c",
+    "regex": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "esp_log.h": "c",
+    "rgb_strip_encoder.h": "c",
+    "rgb_rmt.h": "c",
+    "rmt_tx.h": "c"
+  }
+}
