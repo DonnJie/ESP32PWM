@@ -35,21 +35,5 @@ void led_task(void *pvParameters)
     {   
         led_pwm(get_brightness());
         vTaskDelay(pdMS_TO_TICKS(10));
-//  switch (temp)
-//         {
-//         case 1:
-//             brightness--;
-//             break;
-//         case 0:
-//             brightness++;
-//             break;
-//         default:
-//             break;
-//         }
-//         if (brightness == 40 || brightness == 255)
-//         {
-//             temp = (temp == 1) ? 0 : 1;
-//         }
-
     }
 }

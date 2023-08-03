@@ -22,11 +22,4 @@ void app_main(void)
     xTaskCreate(led_task, "LED Task", 2048, NULL, 4, NULL); 
     xTaskCreate(rgb_rmt_task, "RGB_RMT_task", 2048, NULL, 4, NULL);
 
-    // vTaskDelay(pdMS_TO_TICKS(10000));
-    // printf("test-main\n");
-    // printf("test-main\n");
-    // printf("test-main\n");
-    // printf("test-main\n");
-    // printf("test-main:%d\n",tansfer_func());
-
 }
