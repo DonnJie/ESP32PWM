@@ -4,14 +4,15 @@
 rmt_channel_handle_t led_chan = NULL; // RMT通道句柄
 rmt_encoder_handle_t led_encoder = NULL; // LED灯带编码器句柄
 
-
+ /*
+    h代表色彩， s代表颜色的深浅， v代表颜色的亮度
+ */
 void led_strip_hsv2rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t *g, uint32_t *b)
 {
-    h %= 256; // 将色相值限制在 [0, 255] 的范围内
-    uint32_t rgb_max = v; // 最大RGB值
-    uint32_t rgb_min = rgb_max * (255 - s) / 255; // 最小RGB值
-
-    uint32_t i = h / 43; // 计算所在的色相区间
+    h %= 256; // 将色相值限制在 [0, 255] 的范围内                          //色相值范围，自己定义
+    uint32_t rgb_max = v; // 最大RGB值                                    //uint32_t rgb_max = v * 255 / 100; // 最大RGB值
+    uint32_t rgb_min = rgb_max * (255 - s) / 255; // 最小RGB值            // uint32_t rgb_min = rgb_max * (100 - s) / 100; // 最小RGB值
+    uint32_t i = h / 43; // 计算所在的色相区间                              //色相值乘以6除以范围  256/6 = 43
     uint32_t diff = h % 43; // 计算色相在该区间内的偏移量
 
     // 根据色相调整RGB值
