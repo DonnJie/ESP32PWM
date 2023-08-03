@@ -21,10 +21,7 @@ void app_main(void)
     // 创建 LED 任务
     xTaskCreate(led_task, "LED Task", 2048, NULL, 4, NULL); 
     xTaskCreate(rgb_rmt_task, "RGB_RMT_task", 2048, NULL, 4, NULL);
-    printf("hello world \n");
-    printf("hello world \n");
-    printf("hello world \n");
-    printf("hello world \n");
+
     // vTaskDelay(pdMS_TO_TICKS(10000));
     // printf("test-main\n");
     // printf("test-main\n");
