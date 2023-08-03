@@ -18,7 +18,7 @@ void led_strip_hsv2rgb(uint32_t h, uint32_t s, uint32_t v, uint32_t *r, uint32_t
     // 根据色相调整RGB值
     uint32_t rgb_adj = (rgb_max - rgb_min) * diff / 43;
 
-    switch (i) {
+    switch (i){
     case 0:
         *r = rgb_max;
         *g = rgb_min + rgb_adj;
@@ -99,7 +99,6 @@ void rmt_rgb(uint8_t mode,uint32_t rgb_num1,uint32_t rgb_num2,uint32_t rgb_num3)
                     
                     // 将HSV颜色转换为RGB颜色
                     led_strip_hsv2rgb(hue, saturation, value, &red, &green, &blue);
-
                     led_strip_pixels[j * 3 + 0] = green;
                     led_strip_pixels[j * 3 + 1] = red;
                     led_strip_pixels[j * 3 + 2] = blue;
@@ -143,7 +142,7 @@ void rgb_rmt_task(void *arg)
     {
         rgb_num = get_rgb_num();
         rmt_rgb(rgb_num[0],rgb_num[1],rgb_num[2],rgb_num[3]);
-        printf("test-1\n");
+        //printf("test-1\n");
         vTaskDelay(pdMS_TO_TICKS(20));
         free(rgb_num);
     }
