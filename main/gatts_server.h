@@ -34,6 +34,7 @@ enum
 };
 
 
+
 #define GATTS_TABLE_TAG "GATTS_TABLE_DEMO"
 
 #define PROFILE_NUM                 1
