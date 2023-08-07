@@ -10,6 +10,7 @@ typedef struct {
     int                     prepare_len;
 } prepare_type_env_t;
 
+
 static prepare_type_env_t prepare_write_env;
 
 
