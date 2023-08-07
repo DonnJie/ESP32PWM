@@ -27,6 +27,7 @@
     "esp_log.h": "c",
     "rgb_strip_encoder.h": "c",
     "rgb_rmt.h": "c",
-    "rmt_tx.h": "c"
+    "rmt_tx.h": "c",
+    "esp_gatt_common_api.h": "c"
   }
 }

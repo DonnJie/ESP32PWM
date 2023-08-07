@@ -16,21 +16,21 @@
 /* Attributes State Machine */
 enum
 {
-    IDX_SVC,
-    IDX_CHAR_A,
-    IDX_CHAR_VAL_A,
-    IDX_CHAR_CFG_A,
+    IDX_SVC1,
+    IDX_CHAR_A1,
+    IDX_CHAR_VAL_A1,
+    IDX_CHAR_CFG_A1,
 
-    IDX_CHAR_B, //用于读取温湿度
-    IDX_CHAR_VAL_B,
+    IDX_CHAR_B1, //用于读取温湿度
+    IDX_CHAR_VAL_B1,
 
-    IDX_CHAR_C, //用于接收LEDC命令
-    IDX_CHAR_VAL_C,
+    IDX_CHAR_C1, //用于接收LEDC命令
+    IDX_CHAR_VAL_C1,
 
-    IDX_CHAR_D, //用于接收RGB命令
-    IDX_CHAR_VAL_D,
+    IDX_CHAR_D1, //用于接收RGB命令
+    IDX_CHAR_VAL_D1,
 
-    HRS_IDX_NB,
+    HRS_IDX_NB1,
 };
 
 
