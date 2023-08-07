@@ -14,6 +14,20 @@
 #include "esp_gatt_common_api.h"
 
 /* Attributes State Machine */
+
+enum
+{
+    IDX_SVC,
+    IDX_CHAR_A,
+    IDX_CHAR_VAL_A,
+
+    IDX_CHAR_B,
+    IDX_CHAR_VAL_B,
+
+ 
+    HRS_IDX_NB,
+};
+
 enum
 {
     IDX_SVC1,
