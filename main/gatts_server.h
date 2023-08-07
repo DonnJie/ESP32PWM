@@ -13,6 +13,13 @@
 #include "esp_bt_main.h"
 #include "esp_gatt_common_api.h"
 
+
+//for ota 
+#include "esp_ota_ops.h"
+#include "esp_flash_partitions.h"
+#include "esp_partition.h"
+#include "errno.h"
+
 /* Attributes State Machine */
 
 enum
@@ -54,8 +61,9 @@ enum
 #define PROFILE_NUM                 1
 #define PROFILE_APP_IDX             0
 #define ESP_APP_ID                  0x55
-#define SAMPLE_DEVICE_NAME          "ESP_GATTS_DEMO_sop"
-#define SVC_INST_ID                 0 //服务ID
+#define SAMPLE_DEVICE_NAME          "SOP_ESP32PWM_OTA"
+#define SVC_INST_ID1                 1 //服务ID
+#define SVC_INST_ID                 0 
 
 
 /* The max length of characteristic value. When the GATT client performs a write or prepare write operation,

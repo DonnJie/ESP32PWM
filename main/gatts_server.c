@@ -3,6 +3,7 @@
 
 static uint8_t adv_config_done       = 0;
 
+uint16_t heart_rate_handle_table[HRS_IDX_NB];  //服务心跳句柄
 uint16_t heart_rate_handle_table1[HRS_IDX_NB1];  //服务心跳句柄
 
 typedef struct {
@@ -14,7 +15,7 @@ typedef struct {
 static prepare_type_env_t prepare_write_env;
 
 
-#define CONFIG_SET_RAW_ADV_DATA
+//#define CONFIG_SET_RAW_ADV_DATA
 #ifdef CONFIG_SET_RAW_ADV_DATA
 static uint8_t raw_adv_data[] = {
         /* flags */
@@ -36,11 +37,58 @@ static uint8_t raw_scan_rsp_data[] = {
 };
 
 #else
+
+esp_err_t err;
+/* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
+esp_ota_handle_t update_handle = 1 ;
+const esp_partition_t *update_partition = NULL;
+
 static uint8_t service_uuid[16] = {
     /* LSB <--------------------------------------------------------------------------------> MSB */
     //first uuid, 16bit, [12],[13] is the value
-    0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
+    //0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
+    0xf0, 0x19, 0x21, 0xb4, 0x47, 0x8f, 0xa4, 0xbf, 0xa1, 0x4f, 0x63, 0xfd, 0xee, 0xd6, 0x14, 0x1d,
 };
+
+/*
+Type: com.silabs.characteristic.ota_control
+UUID: F7BF3564-FB6D-4E53-88A4-5E37E0326063
+Silicon Labs OTA Control.
+Property requirements: 
+	Notify - Excluded
+	Read - Excluded
+	Write Without Response - Excluded
+	Write - Mandatory
+	Reliable write - Excluded
+	Indicate - Excluded
+*/
+static uint8_t char_ota_control_uuid[16] = {
+    /* LSB <--------------------------------------------------------------------------------> MSB */
+    //first uuid, 16bit, [12],[13] is the value
+    //0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
+    0x63, 0x60, 0x32, 0xe0, 0x37, 0x5e, 0xa4, 0x88, 0x53, 0x4e, 0x6d, 0xfb, 0x64, 0x35, 0xbf, 0xf7,
+};
+
+
+/*
+Type: com.silabs.characteristic.ota_data
+UUID: 984227F3-34FC-4045-A5D0-2C581F81A153
+Silicon Labs OTA Data.
+Property requirements: 
+	Notify - Excluded
+	Read - Excluded
+	Write Without Response - Mandatory
+	Write - Mandatory
+	Reliable write - Excluded
+	Indicate - Excluded
+*/
+static uint8_t char_ota_data_uuid[16] = {
+    /* LSB <--------------------------------------------------------------------------------> MSB */
+    //first uuid, 16bit, [12],[13] is the value
+    //0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
+    0x53, 0xa1, 0x81, 0x1f, 0x58, 0x2c, 0xd0, 0xa5, 0x45, 0x40, 0xfc, 0x34, 0xf3, 0x27, 0x42, 0x98,
+};
+
 
 /* The length of adv data must be less than 31 bytes */
 static esp_ble_adv_data_t adv_data = {
@@ -112,6 +160,7 @@ static struct gatts_profile_inst heart_rate_profile_tab[PROFILE_NUM] = {
     },
 };
 
+
 /* Service */
 static const uint16_t GATTS_SERVICE_UUID_TEST1      = 0x00FF;
 static const uint16_t GATTS_CHAR_UUID_TEST1_A       = 0xFF01;
@@ -129,6 +178,9 @@ static const uint8_t char_prop_read_write_notify   = ESP_GATT_CHAR_PROP_BIT_WRIT
 static const uint8_t heart_measurement_ccc[2]      = {0x00, 0x00};
 static const uint8_t char_value[4]                 = {0x11, 0x22, 0x33, 0x44};
 
+static const uint8_t char_prop_write_writenorsp    =  ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_WRITE_NR;
+
+
 /* Full Database Description - Used to add attributes into the database */
 /* Full Database Description - Used to add attributes into the database */
 //创建 Service 的 Characterristic 
@@ -143,7 +195,39 @@ Descriptor：用于描述Characteristic的描述符，包括描述符的UUID、�
 */
 //这段代码是一个定义了GATT数据库的数组，用于描述BLE服务和特性的属性及其相关的值。
 // 创建服务的数据项
-static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB1] =
+
+static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
+{
+    // Service Declaration
+    [IDX_SVC]        =
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&primary_service_uuid, ESP_GATT_PERM_READ,
+      sizeof(service_uuid), sizeof(service_uuid), (uint8_t *)&service_uuid}},
+
+    /* Characteristic Declaration */
+    [IDX_CHAR_A]     =
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ,
+      CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_write_writenorsp}},
+
+    /* Characteristic Value */
+    [IDX_CHAR_VAL_A] =
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_128, (uint8_t *)&char_ota_control_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+      GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
+
+
+    /* Characteristic Declaration */
+    [IDX_CHAR_B]      =
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ,
+      CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_write_writenorsp}},
+
+    /* Characteristic Value */
+    [IDX_CHAR_VAL_B]  =
+    {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_128, (uint8_t *)&char_ota_data_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
+      GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
+
+};
+
+
+static const esp_gatts_attr_db_t gatt_db1[HRS_IDX_NB1] =
 {
     // Service Declaration
     [IDX_SVC1]        =
@@ -190,6 +274,9 @@ static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB1] =
     {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_TEST1_D, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
       GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(char_value), (uint8_t *)char_value}},
 };
+
+
+
 
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
@@ -352,7 +439,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             }
             adv_config_done |= SCAN_RSP_CONFIG_FLAG;
     #endif
-            esp_err_t create_attr_ret = esp_ble_gatts_create_attr_tab(gatt_db, gatts_if, HRS_IDX_NB1, SVC_INST_ID);
+            esp_err_t create_attr_ret = esp_ble_gatts_create_attr_tab(gatt_db, gatts_if, HRS_IDX_NB, SVC_INST_ID);
             if (create_attr_ret){
                 ESP_LOGE(GATTS_TABLE_TAG, "create attr table failed, error code = %x", create_attr_ret);
             }
@@ -371,6 +458,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     //snprintf(th_data, sizeof(th_data), "temp:%.2f,humi:%.2f\n",temperature_out,humidity_out);
                     //sprintf()
                     snprintf(th_data, sizeof(th_data), "temp:%.2f C ,humi:%.2f %%RH", temperature_out, humidity_out);
+                    printf("Don't ota!\n");
                     esp_ble_gatts_set_attr_value(param->read.handle,sizeof(th_data),(uint8_t*)th_data);
                 }
        	    break;
@@ -379,8 +467,54 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             if (!param->write.is_prep){
                 // the data length of gattc write  must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
                 ESP_LOGI(GATTS_TABLE_TAG, "GATT_WRITE_EVT, handle = %d, value len = %d, value :", param->write.handle, param->write.len);
-                esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
-                printf("Test\n");
+                //esp_log_buffer_hex(GATTS_TABLE_TAG, param->write.value, param->write.len);
+            if (heart_rate_handle_table[IDX_CHAR_VAL_A] == param->write.handle && param->write.len == 1)
+                {
+                    uint8_t value = param->write.value[0];
+					ESP_LOGI(GATTS_TABLE_TAG, "ota-control = %d",value);
+					if(0x00 == value){
+						ESP_LOGI(GATTS_TABLE_TAG, "======beginota======");
+						 update_partition = esp_ota_get_next_update_partition(NULL);
+ 					     ESP_LOGI(GATTS_TABLE_TAG, "Writing to partition subtype %d at offset 0x%lu",
+ 					             update_partition->subtype, update_partition->address);
+ 					     assert(update_partition != NULL);
+						 err = esp_ota_begin(update_partition, OTA_WITH_SEQUENTIAL_WRITES, &update_handle);
+						  if (err != ESP_OK) {
+		                        ESP_LOGE(GATTS_TABLE_TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
+		                        esp_ota_abort(update_handle);
+		                  }
+					}
+					else if(0x03 == value){
+						ESP_LOGI(GATTS_TABLE_TAG, "======endota======");
+						err = esp_ota_end(update_handle);
+					    if (err != ESP_OK) {
+					        if (err == ESP_ERR_OTA_VALIDATE_FAILED) {
+					            ESP_LOGE(GATTS_TABLE_TAG, "Image validation failed, image is corrupted");
+					        }
+					        ESP_LOGE(GATTS_TABLE_TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
+					    }
+
+					    err = esp_ota_set_boot_partition(update_partition);
+					    if (err != ESP_OK) {
+					        ESP_LOGE(GATTS_TABLE_TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
+	
+					    }
+					    ESP_LOGI(GATTS_TABLE_TAG, "Prepare to restart system!");
+					    esp_restart();
+					    return ;
+					}
+                }
+				if (heart_rate_handle_table[IDX_CHAR_VAL_B] == param->write.handle)
+                {
+                    uint16_t length = param->write.len;//modify uint8_t to uint16_t when mtu larger than 255
+					ESP_LOGI(GATTS_TABLE_TAG, "ota-data = %d",length);
+					err = esp_ota_write( update_handle, (const void *)param->write.value, length);
+		            if (err != ESP_OK) {
+		                esp_ota_abort(update_handle);
+						ESP_LOGI(GATTS_TABLE_TAG, "esp_ota_write error!");
+		            }
+                }
+
                 if(heart_rate_handle_table1[IDX_CHAR_VAL_C1] == param->write.handle && param->write.len ==1)
                 {
                     //if(param->write.value[0] >=0 && param->write.value[0] <= 255);
@@ -448,7 +582,21 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             break;
 
         case ESP_GATTS_START_EVT:  //GATT_START 任务
-            ESP_LOGI(GATTS_TABLE_TAG, "SERVICE_START_EVT2, status %d, service_handle %d", param->start.status, param->start.service_handle);
+            if(create_tab1 == false) 
+            {
+                printf(" test-0:  %d\n",create_tab1);
+                ESP_LOGI(GATTS_TABLE_TAG, "SERVICE_START_EVT1, status %d, service_handle %d", param->start.status, param->start.service_handle);
+                esp_err_t create_attr_ret1 = esp_ble_gatts_create_attr_tab(gatt_db1, gatts_if, HRS_IDX_NB1, SVC_INST_ID1);
+                if (create_attr_ret1){
+                    ESP_LOGE(GATTS_TABLE_TAG, "create attr table2 failed, error code = %x", create_attr_ret1);
+                }
+                create_tab1 = true; //上面就是创建部分,重点
+                printf(" test-1:  %d\n",create_tab1);
+            } 
+            else
+            {
+                ESP_LOGI(GATTS_TABLE_TAG, "SERVICE_START_EVT2, status %d, service_handle %d", param->start.status, param->start.service_handle);
+            }
             break;
         case ESP_GATTS_CONNECT_EVT:
             ESP_LOGI(GATTS_TABLE_TAG, "ESP_GATTS_CONNECT_EVT, conn_id = %d", param->connect.conn_id);
@@ -469,20 +617,40 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             break;
         case ESP_GATTS_CREAT_ATTR_TAB_EVT: //在Gatt服务被创建并成功注册到Gatt服务器时触发的，它的作用是通知应用程序Gatt服务已经成功创建并可以使用。
         {
+            if(create_tab1 == false)
+            {
+                printf(" test:  %d\n",create_tab1);
+                if (param->add_attr_tab.status != ESP_GATT_OK){
+                    ESP_LOGE(GATTS_TABLE_TAG, "create attribute table failed, error code=0x%x", param->add_attr_tab.status);
+                }
+                else if (param->add_attr_tab.num_handle != HRS_IDX_NB){
+                    ESP_LOGE(GATTS_TABLE_TAG, "create attribute table abnormally, num_handle (%d) \
+                            doesn't equal to HRS_IDX_NB(%d)", param->add_attr_tab.num_handle, HRS_IDX_NB);
+                }
+                else {
+                    ESP_LOGI(GATTS_TABLE_TAG, "create attribute table successfully, the number handle = %d\n",param->add_attr_tab.num_handle);
+                    memcpy(heart_rate_handle_table, param->add_attr_tab.handles, sizeof(heart_rate_handle_table));
+                    esp_ble_gatts_start_service(heart_rate_handle_table[IDX_SVC]);
+                }
+            }
+            else
+            {
             printf(" test: -3\n");
-        if (param->add_attr_tab.status != ESP_GATT_OK){
-            ESP_LOGE(GATTS_TABLE_TAG, "create attribute table failed, error code=0x%x", param->add_attr_tab.status);
-        }
-        else if (param->add_attr_tab.num_handle != HRS_IDX_NB1){
-            ESP_LOGE(GATTS_TABLE_TAG, "create attribute table abnormally, num_handle (%d) \
-                    doesn't equal to HRS_IDX_NB(%d)", param->add_attr_tab.num_handle, HRS_IDX_NB1);
-        }
-        else {
-            ESP_LOGI(GATTS_TABLE_TAG, "create attribute table successfully, the number handle = %d\n",param->add_attr_tab.num_handle);
-            memcpy(heart_rate_handle_table1, param->add_attr_tab.handles, sizeof(heart_rate_handle_table1));
-            esp_ble_gatts_start_service(heart_rate_handle_table1[IDX_SVC1]);
-        }  
+            if (param->add_attr_tab.status != ESP_GATT_OK){
+                ESP_LOGE(GATTS_TABLE_TAG, "create attribute table failed, error code=0x%x", param->add_attr_tab.status);
+            }
+            else if (param->add_attr_tab.num_handle != HRS_IDX_NB1){
+                ESP_LOGE(GATTS_TABLE_TAG, "create attribute table abnormally, num_handle (%d) \
+                        doesn't equal to HRS_IDX_NB(%d)", param->add_attr_tab.num_handle, HRS_IDX_NB1);
+            }
+            else {
+                ESP_LOGI(GATTS_TABLE_TAG, "create attribute table successfully, the number handle = %d\n",param->add_attr_tab.num_handle);
+                memcpy(heart_rate_handle_table1, param->add_attr_tab.handles, sizeof(heart_rate_handle_table1));
+                esp_ble_gatts_start_service(heart_rate_handle_table1[IDX_SVC1]);
+            } 
+            } 
             break;
+            
         }
         case ESP_GATTS_STOP_EVT:
         case ESP_GATTS_OPEN_EVT:
