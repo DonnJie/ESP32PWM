@@ -28,6 +28,7 @@
     "rgb_strip_encoder.h": "c",
     "rgb_rmt.h": "c",
     "rmt_tx.h": "c",
-    "esp_gatt_common_api.h": "c"
+    "esp_gatt_common_api.h": "c",
+    "esp_system.h": "c"
   }
 }

@@ -458,7 +458,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     //snprintf(th_data, sizeof(th_data), "temp:%.2f,humi:%.2f\n",temperature_out,humidity_out);
                     //sprintf()
                     snprintf(th_data, sizeof(th_data), "temp:%.2f C ,humi:%.2f %%RH", temperature_out, humidity_out);
-                    printf("Don't ota!\n");
+                    printf("ota sucessful!\n");
                     esp_ble_gatts_set_attr_value(param->read.handle,sizeof(th_data),(uint8_t*)th_data);
                 }
        	    break;
