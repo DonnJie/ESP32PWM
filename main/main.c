@@ -15,7 +15,6 @@ void app_main(void)
     Bluetooth_init();
     // 初始化 LEDC 驱动程序库
     ledc_fade_func_install(0);
-
     // 创建读取传感器数据的任务
     xTaskCreate(shtc3_task, "shtc3_task", 2048, NULL, 5, NULL);
     // 创建 LED 任务
