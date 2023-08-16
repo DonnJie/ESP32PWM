@@ -1,4 +1,3 @@
-
 #include "shtc3.h"
 #include "ledc.h"
 #include "freertos/FreeRTOS.h"

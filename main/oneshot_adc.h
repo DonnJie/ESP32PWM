@@ -45,10 +45,17 @@ const static char *TAG_ADC = "oneshot_adc";
 static int adc_raw[2][10];
 static int voltage[2][10];
 
+typedef struct 
+{
+        int adc_raw_value;
+        int voltage_value;
+} ADC1_Values;
+
+
 static bool example_adc_calibration_init(adc_unit_t, adc_atten_t, adc_cali_handle_t *);
 static void example_adc_calibration_deinit(adc_cali_handle_t);
 void oneshot_adc_task(void *);
-
+ADC1_Values getADC1_U();
 
 
 

@@ -449,6 +449,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 ESP_LOGI(GATTS_TABLE_TAG, "GATT_READ_EVT, conn_id = %d, trans_id = %ld , handle :%d", param->read.conn_id,param->read.trans_id, param->read.handle);
             if (heart_rate_handle_table1[IDX_CHAR_VAL_B1] == param->read.handle)
                 { 
+                    printf("ADC:%d mV\n",getADC1_U().voltage_value);
                     float temperature_out  = getTemperature();
                     float humidity_out  = getHumidity();
                     //the size of notify_data[] need less than MTU size
@@ -458,7 +459,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                     //snprintf(th_data, sizeof(th_data), "temp:%.2f,humi:%.2f\n",temperature_out,humidity_out);
                     //sprintf()
                     snprintf(th_data, sizeof(th_data), "temp:%.2f C ,humi:%.2f %%RH", temperature_out, humidity_out);
-                    printf("ota sucessful!\n");
+                    //printf("ota sucessful!\n");
                     esp_ble_gatts_set_attr_value(param->read.handle,sizeof(th_data),(uint8_t*)th_data);
                 }
        	    break;
