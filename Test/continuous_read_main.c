@@ -12,6 +12,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "esp_adc/adc_continuous.h"
+#include "onrshot_adc.h"
 
 #define EXAMPLE_READ_LEN   256
 #define EXAMPLE_ADC_CONV_MODE           ADC_CONV_SINGLE_UNIT_1

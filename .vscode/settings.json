@@ -5,7 +5,7 @@
   "idf.openOcdConfigs": [
     "board/esp32c3-builtin.cfg"
   ],
-  "idf.portWin": "COM4",
+  "idf.portWin": "COM6",
   "files.associations": {
     "shtc3.h": "c",
     "freertos.h": "c",
