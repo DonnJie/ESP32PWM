@@ -27,6 +27,7 @@ void led_pwm(uint8_t brightness)
     // 更新 PWM 信号的占空比
     ledc_update_duty(LEDC_HS_MODE, LEDC_HS_CH0_CHANNEL); // 将LED通道中的占空比参数更新到PWM信号中，从而控制LED灯的亮度
 }
+
 void led_task(void *pvParameters)
 {
    // uint8_t brightness = 255; // 37, 175, 243
