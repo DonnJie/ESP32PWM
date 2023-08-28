@@ -1,4 +1,4 @@
-# ESP-IDF Partition Table
+# ESP-IDF Partition Table,,,,,
 # Name,   Type, SubType, Offset,  Size, Flags
 nvs,      data, nvs,     ,  0x4000,
 otadata,  data, ota,    ,  0x2000,

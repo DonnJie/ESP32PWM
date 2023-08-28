@@ -12,25 +12,47 @@
 #include "esp_gatts_api.h"
 #include "esp_bt_main.h"
 #include "esp_gatt_common_api.h"
+#include "oneshot_adc.h"
+
+
+//for ota 
+#include "esp_ota_ops.h"
+#include "esp_flash_partitions.h"
+#include "esp_partition.h"
+#include "errno.h"
 
 /* Attributes State Machine */
+
 enum
 {
     IDX_SVC,
     IDX_CHAR_A,
     IDX_CHAR_VAL_A,
-    IDX_CHAR_CFG_A,
 
-    IDX_CHAR_B, //用于读取温湿度
+    IDX_CHAR_B,
     IDX_CHAR_VAL_B,
 
-    IDX_CHAR_C, //用于接收LEDC命令
-    IDX_CHAR_VAL_C,
-
-    IDX_CHAR_D, //用于接收RGB命令
-    IDX_CHAR_VAL_D,
-
+ 
     HRS_IDX_NB,
+};
+
+enum
+{
+    IDX_SVC1,
+    IDX_CHAR_A1,
+    IDX_CHAR_VAL_A1,
+    IDX_CHAR_CFG_A1,
+
+    IDX_CHAR_B1, //用于读取温湿度
+    IDX_CHAR_VAL_B1,
+
+    IDX_CHAR_C1, //用于接收LEDC命令
+    IDX_CHAR_VAL_C1,
+
+    IDX_CHAR_D1, //用于接收RGB命令
+    IDX_CHAR_VAL_D1,
+
+    HRS_IDX_NB1,
 };
 
 
@@ -40,8 +62,9 @@ enum
 #define PROFILE_NUM                 1
 #define PROFILE_APP_IDX             0
 #define ESP_APP_ID                  0x55
-#define SAMPLE_DEVICE_NAME          "ESP_GATTS_DEMO_sop"
-#define SVC_INST_ID                 0 //服务ID
+#define SAMPLE_DEVICE_NAME          "SOP_ESP32PWM_OTA"
+#define SVC_INST_ID1                 1 //服务ID
+#define SVC_INST_ID                 0 
 
 
 /* The max length of characteristic value. When the GATT client performs a write or prepare write operation,
